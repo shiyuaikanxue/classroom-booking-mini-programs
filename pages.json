@@ -1,17 +1,81 @@
 {
-	"pages": [ //pages数组中第一项表示应用启动页，参考：https://uniapp.dcloud.io/collocation/pages
-		{
-			"path": "pages/index/index",
+	"pages": [{
+			"path": "pages/schedule/index",
 			"style": {
-				"navigationBarTitleText": "uni-app"
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/booking/index",
+			"style": {
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/notifications/index",
+			"style": {
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/personalCenter/index",
+			"style": {
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/login/index",
+			"style": {
+				"navigationBarTitleText": "登录",
+				"enablePullDownRefresh": false,
+				"disableScroll": true
 			}
 		}
 	],
+	"tabBar": {
+		"color": "#bfbfbf", // 未选中文本颜色
+		"selectedColor": "#FFBF6B", // 选中文本颜色
+		"borderStyle": "black",
+		"backgroundColor": "#ffffff",
+		"height": "80px", // 设置tabBar高度
+		"fontSize": "10px", // 设置文字大小
+		"iconWidth": "24px", // 设置图标宽度
+		"iconHeight": "24px", // 设置图标高度
+		"spacing": "3px", // 文字和图标间距
+		"list": [{
+				"pagePath": "pages/schedule/index",
+				"text": "课表",
+				"iconPath": "static/footerTab/schedule.png",
+				"selectedIconPath": "static/footerTab/scheduleActive.png"
+			},
+			{
+				"pagePath": "pages/booking/index",
+				"text": "预约",
+				"iconPath": "static/footerTab/booking.png",
+				"selectedIconPath": "static/footerTab/bookingActive.png"
+			},
+			{
+				"pagePath": "pages/notifications/index",
+				"text": "咨询",
+				"iconPath": "static/footerTab/notifications.png",
+				"selectedIconPath": "static/footerTab/notificationsActive.png"
+			},
+			{
+				"pagePath": "pages/personalCenter/index",
+				"text": "我的",
+				"iconPath": "static/footerTab/personalCenter.png",
+				"selectedIconPath": "static/footerTab/personalCenterActive.png"
+			}
+		]
+	},
 	"globalStyle": {
 		"navigationBarTextStyle": "black",
 		"navigationBarTitleText": "uni-app",
 		"navigationBarBackgroundColor": "#F8F8F8",
-		"backgroundColor": "#F8F8F8"
+		"backgroundColor": "#F8F8F8",
+		"app-plus": {
+			"titleNView": false
+		}
 	},
 	"uniIdRouter": {}
 }
