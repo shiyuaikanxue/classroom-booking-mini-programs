@@ -4,36 +4,45 @@ const USER_INFO_KEY = 'user_info'
 
 // 获取token
 export function getToken() {
-  return uni.getStorageSync(TOKEN_KEY)
+	return uni.getStorageSync(TOKEN_KEY)
 }
-
+export function setLoginStatus() {
+	return uni.setStorageSync('loginStatus', true)
+}
+export function setLogoutStatus() {
+	return uni.setStorageSync('loginStatus', false)
+}
+// 获取登录状态
+export function getLoginStatus() {
+	return uni.getStorageSync('loginStatus')
+}
 // 设置token
 export function setToken(token) {
-  return uni.setStorageSync(TOKEN_KEY, token)
+	return uni.setStorageSync(TOKEN_KEY, token)
 }
 
 // 移除token
 export function removeToken() {
-  return uni.removeStorageSync(TOKEN_KEY)
+	return uni.removeStorageSync(TOKEN_KEY)
 }
 
 // 获取用户信息
 export function getUserInfo() {
-  return uni.getStorageSync(USER_INFO_KEY)
+	return uni.getStorageSync(USER_INFO_KEY)
 }
 
 // 设置用户信息
 export function setUserInfo(userInfo) {
-  return uni.setStorageSync(USER_INFO_KEY, userInfo)
+	return uni.setStorageSync(USER_INFO_KEY, userInfo)
 }
 
 // 移除用户信息
 export function removeUserInfo() {
-  return uni.removeStorageSync(USER_INFO_KEY)
+	return uni.removeStorageSync(USER_INFO_KEY)
 }
 
 // 清空所有认证信息
 export function clearAuth() {
-  removeToken()
-  removeUserInfo()
+	removeToken()
+	removeUserInfo()
 }

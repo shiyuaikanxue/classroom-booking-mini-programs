@@ -2,7 +2,7 @@
 	<view class="login-container">
 		<!-- 顶部logo -->
 		<view class="logo-container">
-			<image class="logo" src="/static/logo.png"></image>
+			<image class="logo" src="/static/avatar.gif"></image>
 			<text class="title">欢迎登录</text>
 		</view>
 
@@ -46,7 +46,11 @@
 	import {
 		login
 	} from '@/api/login.js'
-	import {setToken,setUserInfo} from '@/utils/auth.js'
+	import {
+		setToken,
+		setUserInfo,
+		setLoginStatus
+	} from '@/utils/auth.js'
 	export default {
 		data() {
 			return {
@@ -107,7 +111,7 @@
 					// 存储token和用户信息
 					setToken(token);
 					setUserInfo(user);
-
+					setLoginStatus()
 					// 跳转到首页
 					uni.reLaunch({
 						url: '/pages/schedule/index'
