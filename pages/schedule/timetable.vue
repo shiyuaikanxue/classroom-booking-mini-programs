@@ -5,15 +5,15 @@
 			:activeStyle="{color: '#FFBF6B', fontWeight: 'bold'}" :scrollable="true" @change="fetchScheduleData">
 		</uv-tabs>
 
-		<!-- 新增：日期轴 -->
+		<!-- 日期轴 -->
 		<view class="date-axis">
 			<view class="logo">
 				<uv-icon name="calendar" color="#FFBF6B" size="28"></uv-icon>
 			</view>
 			<view class="date-item" v-for="(date, index) in currentWeekDates" :key="index" :class="{ 
-		          'today': isToday(date, index),
-		          'weekend': index >= 5 
-		        }">
+          'today': isToday(date, index),
+          'weekend': index >= 5 
+        }">
 				<text class="day">{{ daysDist[index] }}</text>
 				<text class="date">{{ date }}</text>
 				<view class="today-marker" v-if="isToday(date, index)"></view>
@@ -30,24 +30,27 @@
 					<text>{{item.end}}</text>
 				</view>
 			</view>
-
+			<view class="no-course-tip" v-if="isEmpty">
+				<uv-icon name="list" size="40" color="#ccc"></uv-icon>
+				<text class="tip-text">暂无课程</text>
+			</view>
 			<!-- 右侧课程格子 -->
-			<scroll-view scroll-y class="course-grid">
-				<view class="week-row" v-for="(week, weekIndex) in weekList" :key="weekIndex"
-					v-show="currentWeek === weekIndex">
+			<view scroll-y class="course-grid">
+				<view class="week-row">
 					<view class="day-column" v-for="(day, dayIndex) in days" :key="dayIndex">
-						<view class="course-item" v-for="course in getCourses(weekIndex, dayIndex)"
-							:key="course.schedule_id"
-							:style="{backgroundColor: getCourseColor(course.course_name), height: calculateHeightRpx(course)}"
+						<view class="course-item" v-for="(course, courseIndex) in getCourses(currentWeek, dayIndex)"
+							:key="courseIndex"
+							:style="{backgroundColor: getCourseColor(course.course_name), height: calculateHeightRpx(course),top:calculateTop(course)}"
 							@click="handleCourseClick(course)">
 							<text class="course-name">{{ course.course_name }}</text>
-							<text class="course-location">{{ course.classroom_location }}</text>
-							<text class="course-teacher">{{ course.teacher_name }}</text>
+							<text class="course-classroomCode">{{ course.classroom_code }}</text>
 						</view>
 					</view>
 				</view>
-			</scroll-view>
+			</view>
 		</view>
+		<CourseDetailPopup :visible="showCourseDetail" @update:visible="showCourseDetail = $event"
+			:course="currentCourse" @close="handlePopupClose" />
 	</view>
 </template>
 <script setup>
@@ -55,7 +58,7 @@
 		ref,
 		computed,
 		onMounted,
-		reactive
+		reactive,
 	} from 'vue'
 	import {
 		timeSlots,
@@ -66,7 +69,10 @@
 	import {
 		getSchedules
 	} from '@/api/schedules.js'
-
+	import {
+		rpxRatio
+	} from '@/utils/ratio.js'
+	import CourseDetailPopup from './CourseDetailPopup.vue' // 根据实际路径调整
 	// 颜色生成器
 	const colors = [
 		'#f8d486', '#a0d8ef', '#b5ead7', '#ffb7b2',
@@ -82,22 +88,23 @@
 		return courseColorMap[courseName]
 	}
 
-	// 获取rpx转换比例
-	const systemInfo = uni.getSystemInfoSync()
-	const rpxRatio = systemInfo.windowWidth / 750
 
 	// 当前周数 (0-19表示20周)
 	const currentWeek = ref(0)
 	const schedules = reactive({
-		Friday: [],
 		Monday: [],
-		Saturday: [],
-		Sunday: [],
-		Thursday: [],
 		Tuesday: [],
 		Wednesday: [],
+		Thursday: [],
+		Friday: [],
+		Saturday: [],
+		Sunday: []
 	})
-
+	const isEmpty = computed(() => {
+		return Object.keys(schedules).every(day => {
+			return schedules[day].length === 0
+		})
+	})
 	// 周列表数据
 	const weekList = computed(() => {
 		return Array.from({
@@ -109,6 +116,8 @@
 		}))
 	})
 
+	// 星期映射
+	const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
 	// 计算当前周的日期
 	const currentWeekDates = computed(() => {
@@ -146,7 +155,12 @@
 			const res = await getSchedules({
 				week: currentWeek.value + 1, // API可能需要从1开始计数
 			})
-			schedules.value = res.data.schedule
+
+			// 更新课表数据
+			Object.keys(schedules).forEach(day => {
+				schedules[day] = res.data.schedule[day] || []
+			})
+
 		} catch (e) {
 			console.error('获取课表失败', e)
 			uni.showToast({
@@ -157,40 +171,38 @@
 	}
 
 	// 获取指定周和天的课程
-	const getCourses = (week, day) => {
-		return schedules.value.filter(schedule => {
-			const scheduleDate = new Date(schedule.start_time)
-			const scheduleWeek = Math.floor((scheduleDate - new Date(startData)) / (7 * 24 * 60 * 60 *
-				1000))
-			const scheduleDay = scheduleDate.getDay() - 1 // 转换为0-6的索引
-
-			return scheduleWeek === week && scheduleDay === day
-		}).map(schedule => {
-			// 添加时间槽索引
-			const timeSlotIndex = timeSlotMap[schedule.time_slot] || 0
-			return {
-				...schedule,
-				start: timeSlotIndex,
-				end: timeSlotIndex + (schedule.time_slot.includes('、') ? 1 : 0)
-			}
-		})
+	const getCourses = (week, dayIndex) => {
+		const dayName = days[dayIndex]
+		return schedules[dayName] || []
 	}
 
-	// 计算课程高度(rpx)
+
+	// 转换为px
 	const calculateHeightRpx = (course) => {
-		const duration = course.end - course.start + 1
-		return `${duration * 100}rpx` // 每节课高度100rpx
+
+		const rpxValue = timeSlotMap[course.time_slot].height * 100 +
+			(timeSlotMap[course.time_slot].height - 1) * 10;
+		return `${rpxValue * rpxRatio}px`;
 	}
 
+	const calculateTop = (course) => {
+		const rpxValue = timeSlotMap[course.time_slot].top * 100 + (timeSlotMap[course.time_slot].top - 1) * 10;
+		return `${rpxValue * rpxRatio}px`;
+	}
+
+	const showCourseDetail = ref(false)
+	const currentCourse = ref({})
+	// 课程点击事件
 	// 课程点击事件
 	const handleCourseClick = (course) => {
-		uni.showModal({
-			title: course.course_name,
-			content: `教师: ${course.teacher_name}\n教室: ${course.classroom_location}\n时间: ${course.time_slot}`,
-			showCancel: false
-		})
+		currentCourse.value = course
+		showCourseDetail.value = true
 	}
 
+	// 添加弹窗关闭处理
+	const handlePopupClose = () => {
+		showCourseDetail.value = false
+	}
 	// 初始化加载数据
 	onMounted(() => {
 		fetchScheduleData({
@@ -271,12 +283,15 @@
 		}
 
 		.timetable-body {
-			flex: 1;
+			// flex: 1;
 			display: flex;
 			overflow: scroll;
 
 			.time-axis {
 				width: 80rpx;
+				display: flex;
+				flex-direction: column;
+				row-gap: 10rpx;
 				background-color: transparent;
 
 				.time-item {
@@ -287,12 +302,37 @@
 					justify-content: center;
 					font-size: 16rpx;
 					color: #666;
+					flex-shrink: 0;
 
 					.order {
 						font-size: 20rpx;
 						margin-bottom: 4rpx;
 					}
 				}
+			}
+
+			.no-course-tip {
+				position: absolute;
+				top: 50%;
+				left: 50%;
+				transform: translate(-50%, -50%);
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				justify-content: center;
+				width: 100%;
+				color: #ccc;
+
+				.tip-text {
+					font-size: 24rpx;
+					margin-top: 10rpx;
+				}
+			}
+
+			.day-column {
+				/* 修改原有样式，添加最小高度 */
+				min-height: 600rpx;
+				position: relative;
 			}
 
 			.course-grid {
@@ -315,18 +355,19 @@
 							padding: 8rpx;
 							display: flex;
 							flex-direction: column;
+							justify-content: space-between;
 							box-sizing: border-box;
 							color: #333;
 							font-size: 24rpx;
 							overflow: hidden;
 
 							.course-name {
+								font-size: 22rpx;
 								font-weight: bold;
 								margin-bottom: 4rpx;
 							}
 
-							.course-location,
-							.course-teacher {
+							.course-classroomCode {
 								font-size: 20rpx;
 								line-height: 1.4;
 							}
