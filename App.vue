@@ -5,7 +5,13 @@
 </script>
 
 <style>
+	.uv-list {
+		background-color: transparent !important;
+	}
 
+	.uv-cell__title-text {
+		font-size: 26rpx !important;
+	}
 </style>
 
 <style lang="scss">

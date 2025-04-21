@@ -1,7 +1,7 @@
 <template>
 	<view class="timetable-container">
 		<!-- 周选择器 -->
-		<uv-tabs :list="weekList" v-model="currentWeek" lineColor="#FFBF6B"
+		<uv-tabs :list="weekList" :current="currentWeek" lineColor="#FFBF6B"
 			:activeStyle="{color: '#FFBF6B', fontWeight: 'bold'}" :scrollable="true" @change="fetchScheduleData">
 		</uv-tabs>
 
@@ -179,7 +179,6 @@
 
 	// 转换为px
 	const calculateHeightRpx = (course) => {
-
 		const rpxValue = timeSlotMap[course.time_slot].height * 100 +
 			(timeSlotMap[course.time_slot].height - 1) * 10;
 		return `${rpxValue * rpxRatio}px`;
@@ -203,10 +202,28 @@
 	const handlePopupClose = () => {
 		showCourseDetail.value = false
 	}
+	const initialize = () => {
+		// 获取当前日期
+		const today = new Date();
+		// 获取学期开始日期（从你的startData常量）
+		const startDate = new Date(startData);
+
+		// 计算当前日期与学期开始日期的周数差
+		const timeDiff = today.getTime() - startDate.getTime();
+		const daysDiff = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+		let weekDiff = Math.floor(daysDiff / 7);
+
+		// 确保周数在0-19范围内（20周）
+		weekDiff = Math.max(0, Math.min(weekDiff, 19));
+
+		// 设置当前周数
+		currentWeek.value = weekDiff;
+	}
 	// 初始化加载数据
 	onMounted(() => {
+		initialize()
 		fetchScheduleData({
-			value: 0
+			value: currentWeek.value
 		})
 	})
 </script>
@@ -270,14 +287,14 @@
 						font-weight: bold;
 					}
 
-					.today-marker {
-						position: absolute;
-						bottom: 10rpx;
-						width: 12rpx;
-						height: 12rpx;
-						border-radius: 50%;
-						background-color: #FF6B6B;
-					}
+					// .today-marker {
+					// 	position: absolute;
+					// 	bottom: 10rpx;
+					// 	width: 12rpx;
+					// 	height: 12rpx;
+					// 	border-radius: 50%;
+					// 	background-color: #FF6B6B;
+					// }
 				}
 			}
 		}

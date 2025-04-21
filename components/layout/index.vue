@@ -17,7 +17,6 @@
 
 	onMounted(() => {
 		const rect = uni.getMenuButtonBoundingClientRect() // 获取胶囊按钮的高度
-		console.log(rect)
 		if (rect) {
 			paddingTop.value = rect.top * pxRatio // 计算padding-top的值
 		}
