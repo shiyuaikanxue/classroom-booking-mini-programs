@@ -8,23 +8,35 @@
 				</view>
 			</view>
 		</headerVue>
+		<notification-list class="list" v-if="activeTab === 0" :school-id="currentSchoolId" />
+
+		<!-- 公告列表 -->
+		<announcement-list class="list" v-if="activeTab === 1" :school-id="currentSchoolId" />
 	</layout>
 </template>
 
 <script setup>
 	import layout from '@/components/layout/index.vue'
 	import headerVue from '@/components/header/index.vue'
+	import notificationList from './NotificationList.vue'
+	import announcementList from './AnnouncementList.vue'
 	import {
 		ref
 	} from 'vue';
 	import {
+		getUserInfo
+	} from '@/utils/auth.js'
+	import {
 		onShow
 	} from '@dcloudio/uni-app';
 	const tabList = ref([{
-		name: '咨询',
+		name: '通知',
 		type: 0
+	}, {
+		name: '公告',
+		type: 1
 	}])
-
+	const school_id = getUserInfo().school_id
 	const activeTab = ref(0)
 	const reservationList = ref(null)
 
@@ -54,4 +66,8 @@
 		}
 	}
 
+	.list {
+		flex-grow: 1;
+		overflow: scroll;
+	}
 </style>
