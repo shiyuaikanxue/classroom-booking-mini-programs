@@ -5,9 +5,9 @@
 			@scrolltolower="loadMore">
 			<!-- 公告卡片列表 -->
 			<view v-for="item in list" :key="item.id" class="announcement-card" :class="{
-          'top-card': item.is_top,
-          'urgent-card': item.is_urgent
-        }">
+        'top-card': item.is_top,
+        'urgent-card': item.is_urgent
+      }" @click="handleItemClick(item)">
 				<!-- 卡片头部 -->
 				<view class="card-header">
 					<view class="tags">
@@ -21,7 +21,10 @@
 				<text class="card-title">{{ item.title }}</text>
 
 				<!-- 卡片内容 -->
-				<text class="card-content">{{ item.content }}</text>
+				<view class="content-wrapper">
+					<text class="card-content">{{ item.content }}</text>
+					<text v-if="shouldShowMore(item.content)" class="view-more">查看更多</text>
+				</view>
 
 				<!-- 底部装饰线 -->
 				<view class="card-divider"></view>
@@ -75,6 +78,13 @@
 	const pageSize = ref(10)
 	const noMore = ref(false)
 
+	// 判断是否需要显示"查看更多"
+	const shouldShowMore = (content) => {
+		if (!content) return false
+		// 超过100个字符或包含换行符时显示
+		return content.length > 100 || content.includes('\n')
+	}
+
 	const fetchAnnouncements = async () => {
 		try {
 			loading.value = true
@@ -116,6 +126,13 @@
 		uni.stopPullDownRefresh()
 	}
 
+	// 点击卡片跳转详情
+	const handleItemClick = (item) => {
+		uni.navigateTo({
+			url: `AnnouncementDetail?id=${item.id}`
+		})
+	}
+
 	onMounted(() => {
 		fetchAnnouncements()
 	})
@@ -138,6 +155,12 @@
 				box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.04);
 				position: relative;
 				overflow: hidden;
+				transition: all 0.2s;
+
+				&:active {
+					transform: scale(0.99);
+					opacity: 0.9;
+				}
 
 				&.top-card {
 					border-left: 6rpx solid #ffcc00;
@@ -191,15 +214,29 @@
 					line-height: 1.4;
 				}
 
-				.card-content {
-					font-size: 28rpx;
-					color: #666;
-					line-height: 1.6;
-					display: -webkit-box;
-					-webkit-line-clamp: 3;
-					-webkit-box-orient: vertical;
-					overflow: hidden;
-					text-overflow: ellipsis;
+				.content-wrapper {
+					position: relative;
+
+					.card-content {
+						font-size: 28rpx;
+						color: #666;
+						line-height: 1.6;
+						display: -webkit-box;
+						-webkit-line-clamp: 2;
+						-webkit-box-orient: vertical;
+						overflow: hidden;
+						text-overflow: ellipsis;
+					}
+
+					.view-more {
+						position: absolute;
+						right: 0;
+						bottom: 0;
+						background: linear-gradient(to right, transparent, #fff 30%);
+						padding-left: 60rpx;
+						color: #2979ff;
+						font-size: 26rpx;
+					}
 				}
 
 				.card-divider {

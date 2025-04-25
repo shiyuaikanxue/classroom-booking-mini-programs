@@ -1,28 +1,53 @@
 <template>
-	<view class="layout-container page-container" :style="{paddingTop: paddingTop + 'rpx'}">
-		<!-- 添加默认插槽 -->
+	<view class="layout-container page-container" :style="{paddingTop: paddingTop + 'rpx', background: background}">
 		<slot></slot>
 	</view>
 </template>
 
 <script setup>
 	import {
+		ref,
+		computed,
 		onMounted,
-		ref
-	} from 'vue'
+		onUnmounted
+	} from 'vue';
 	import {
 		pxRatio
-	} from '@/utils/ratio.js'
-	const paddingTop = ref(0)
+	} from '@/utils/ratio.js';
+	import {
+		useTheme
+	} from '@/utils/theme.js';
 
+	const {
+		theme,
+		getPrimaryWithOpacity,
+		onThemeChange
+	} = useTheme();
+	const paddingTop = ref(0);
+
+	// 使用计算属性 + 手动更新
+	const background = ref('');
+
+	const updateBackground = () => {
+		background.value =
+			`linear-gradient(to bottom, ${getPrimaryWithOpacity(0.35)} 0%, ${getPrimaryWithOpacity(0)} 100%)`;
+	};
+
+	// 初始化
+	updateBackground();
+
+	// 监听主题变化
 	onMounted(() => {
-		const rect = uni.getMenuButtonBoundingClientRect() // 获取胶囊按钮的高度
-		if (rect) {
-			paddingTop.value = rect.top * pxRatio // 计算padding-top的值
-		}
-	})
-</script>
+		const rect = uni.getMenuButtonBoundingClientRect();
+		if (rect) paddingTop.value = rect.top * pxRatio;
 
+		// 添加主题监听
+		const unsubscribe = onThemeChange(updateBackground);
+
+		// 组件卸载时取消监听
+		onUnmounted(unsubscribe);
+	});
+</script>
 <style>
 	.layout-container {
 		width: 100%;

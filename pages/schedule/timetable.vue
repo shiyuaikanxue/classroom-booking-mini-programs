@@ -1,14 +1,14 @@
 <template>
 	<view class="timetable-container">
 		<!-- 周选择器 -->
-		<uv-tabs :list="weekList" :current="currentWeek" lineColor="#FFBF6B"
-			:activeStyle="{color: '#FFBF6B', fontWeight: 'bold'}" :scrollable="true" @change="fetchScheduleData">
+		<uv-tabs :list="weekList" :current="currentWeek" :lineColor="themeColor"
+			:activeStyle="{color: themeColor, fontWeight: 'bold'}" :scrollable="true" @change="fetchScheduleData">
 		</uv-tabs>
 
 		<!-- 日期轴 -->
 		<view class="date-axis">
 			<view class="logo">
-				<uv-icon name="calendar" color="#FFBF6B" size="28"></uv-icon>
+				<uv-icon name="calendar" :color="themeColor" size="28"></uv-icon>
 			</view>
 			<view class="date-item" v-for="(date, index) in currentWeekDates" :key="index" :class="{ 
           'today': isToday(date, index),
@@ -59,6 +59,7 @@
 		computed,
 		onMounted,
 		reactive,
+		onUnmounted
 	} from 'vue'
 	import {
 		timeSlots,
@@ -73,6 +74,23 @@
 		rpxRatio
 	} from '@/utils/ratio.js'
 	import CourseDetailPopup from './CourseDetailPopup.vue' // 根据实际路径调整
+	import {useTheme} from '@/utils/theme.js'
+	const {
+		theme,
+		getPrimaryWithOpacity,
+		onThemeChange
+	} = useTheme();
+	const paddingTop = ref(0);
+
+	// 使用计算属性 + 手动更新
+	const themeColor = ref('');
+
+	const updateThemeColor = () => {
+		themeColor.value = theme.primaryColor
+	};
+
+	// 初始化
+	updateThemeColor();
 	// 颜色生成器
 	const colors = [
 		'#f8d486', '#a0d8ef', '#b5ead7', '#ffb7b2',
@@ -225,6 +243,11 @@
 		fetchScheduleData({
 			value: currentWeek.value
 		})
+		// 添加主题监听
+		const unsubscribe = onThemeChange(updateThemeColor);
+
+		// 组件卸载时取消监听
+		onUnmounted(unsubscribe);
 	})
 </script>
 

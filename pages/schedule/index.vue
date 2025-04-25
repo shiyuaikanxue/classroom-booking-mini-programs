@@ -9,7 +9,7 @@
 			</view>
 		</headerVue>
 		<!-- 添加课表组件 -->
-		<timetable class="timetableStyle" v-if="activeTab === 0" />
+		<timetable class="timetableStyle" />
 	</layout>
 </template>
 
@@ -23,9 +23,6 @@
 	const tabList = ref([{
 		name: '课表',
 		type: 0
-	}, {
-		name: '全部安排',
-		type: 1
 	}])
 	const activeTab = ref(0)
 	const handleExchange = (type) => {

@@ -9,8 +9,6 @@
 			</view>
 		</headerVue>
 		<ReservationList ref="reservationList" class="reservationList" />
-		<!-- 使用uv-ui的浮动按钮 -->
-		<uv-fab :pattern="pattern" @click="handleAddReservation"></uv-fab>
 		<FooterBtn @submit="handleAddReservation" />
 	</layout>
 </template>

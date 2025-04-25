@@ -1,42 +1,40 @@
 <template>
 	<view class="notification-container">
-		<!-- 自定义列表容器 -->
 		<scroll-view class="custom-list" scroll-y refresher-enabled @refresherrefresh="onRefresh"
 			@scrolltolower="loadMore">
-			<!-- 列表项 -->
 			<view v-for="(item, index) in list" :key="item.id" class="list-item"
 				:class="{'urgent-item': item.is_urgent, 'last-item': index === list.length - 1}"
 				@click="handleItemClick(item)">
-				<!-- 左侧图标 -->
 				<view class="item-icon">
 					<uv-icon :name="item.is_urgent ? 'bell-fill' : 'file-text'"
 						:color="item.is_urgent ? '#ff4d4f' : '#2979ff'" size="20" />
 				</view>
 
-				<!-- 内容区域 -->
 				<view class="item-content">
 					<view class="item-header">
 						<text class="item-title">{{ item.title }}</text>
 						<text v-if="item.is_urgent" class="urgent-tag">紧急</text>
 					</view>
 					<text class="item-time">{{ formatTime(item.created_at) }}</text>
-					<text class="item-message">{{ item.message }}</text>
+					<view class="item-message-wrapper">
+						<text class="item-message">{{ item.message }}</text>
+						<text v-if="shouldShowMore(item.message)" class="view-more" @click.stop="handleViewMore(item)">
+							查看更多
+						</text>
+					</view>
 				</view>
 			</view>
 
-			<!-- 加载状态 -->
 			<view v-if="loading" class="loading-state">
 				<uv-loading mode="circle" color="#2979ff" />
 				<text>加载中...</text>
 			</view>
 
-			<!-- 没有更多了 -->
 			<view v-if="noMore && list.length > 0" class="no-more">
 				没有更多了
 			</view>
 		</scroll-view>
 
-		<!-- 空状态 -->
 		<view v-if="!loading && list.length === 0" class="empty-state">
 			<text class="empty-text">暂无通知</text>
 			<text class="empty-subtext">暂时没有新的通知消息</text>
@@ -72,10 +70,15 @@
 	const pageSize = ref(10)
 	const noMore = ref(false)
 
+	const shouldShowMore = (message) => {
+		if (!message) return false
+		// 判断是否需要显示"查看更多"：超过80个字符或包含换行
+		return message.length > 80 || message.includes('\n')
+	}
+
 	const fetchNotifications = async () => {
 		try {
 			loading.value = true
-
 			const res = await getAllNotifications({
 				student_id: getUserInfo().student_id,
 				page: page.value,
@@ -114,7 +117,13 @@
 
 	const handleItemClick = (item) => {
 		uni.navigateTo({
-			url: `/pages/notification/detail?id=${item.id}`
+			url: `NotificationDetail?id=${item.id}`
+		})
+	}
+
+	const handleViewMore = (item) => {
+		uni.navigateTo({
+			url: `NotificationDetail?id=${item.id}`
 		})
 	}
 
@@ -198,15 +207,32 @@
 						margin-bottom: 12rpx;
 					}
 
-					.item-message {
+					.item-message-wrapper {
+						position: relative;
 						font-size: 28rpx;
 						color: #666;
 						line-height: 1.6;
-						display: -webkit-box;
-						-webkit-line-clamp: 2;
-						-webkit-box-orient: vertical;
-						overflow: hidden;
-						text-overflow: ellipsis;
+
+						.item-message {
+							display: -webkit-box;
+							-webkit-line-clamp: 2;
+							/* 限制为两行 */
+							-webkit-box-orient: vertical;
+							overflow: hidden;
+							text-overflow: ellipsis;
+							max-height: 3.2em;
+							/* 两行高度 */
+						}
+
+						.view-more {
+							position: absolute;
+							right: 0;
+							bottom: 0;
+							background: linear-gradient(to right, transparent, #fff 30%);
+							padding-left: 60rpx;
+							color: #2979ff;
+							font-size: 26rpx;
+						}
 					}
 				}
 			}
@@ -217,7 +243,6 @@
 				padding: 30rpx;
 				color: #999;
 				font-size: 28rpx;
-
 				display: flex;
 				flex-direction: column;
 				align-items: center;
@@ -232,12 +257,6 @@
 			align-items: center;
 			justify-content: center;
 			padding-top: 100rpx;
-
-			.empty-image {
-				width: 300rpx;
-				height: 300rpx;
-				opacity: 0.6;
-			}
 
 			.empty-text {
 				color: #333;

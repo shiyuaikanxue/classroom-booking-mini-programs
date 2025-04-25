@@ -1,11 +1,15 @@
 <template>
 	<layout>
 		<!-- 自定义头部 -->
-		<headerVue title="个人中心" :showBack="false" />
+		<headerVue>
+			<view class="title">
+				<text class="text">个人中心</text>
+			</view>
+		</headerVue>
 
 		<view class="profile-container">
 			<!-- 用户信息卡片 -->
-			<view class="user-card" @click="navigateTo('/pages/profile/edit')">
+			<view class="user-card" @click="navigateTo('edit')">
 				<view class="avatar-wrapper">
 					<image :src="userInfo.avatar || '/static/avatar.gif'" mode="aspectFill" class="avatar" />
 					<uv-icon name="camera" size="18" color="#fff" class="camera-icon" />
@@ -26,7 +30,7 @@
 
 			<!-- 功能入口网格 -->
 			<view class="function-grid">
-				<view v-for="item in functions" :key="item.id" class="function-item" @click="navigateTo(item.path)">
+				<view v-for="item in functions" :key="item.id" class="function-item" @click="tip">
 					<view class="icon-wrapper" :style="{ backgroundColor: item.bgColor }">
 						<uv-icon :name="item.icon" size="20" :color="item.color" />
 					</view>
@@ -67,7 +71,9 @@
 	import {
 		getStudentById
 	} from '@/api/student.js'
-
+	import {
+		getLoginStatus
+	} from '@/utils/auth.js'
 	const userInfo = ref({
 		student_id: '',
 		name: '',
@@ -80,8 +86,8 @@
 		phone: ''
 	})
 
-	const isLogin = ref(false)
-
+	const isLogin = ref(getLoginStatus())
+	console.log('isLogin:', isLogin)
 	// 初始化用户信息
 	const initInfo = async () => {
 		try {
@@ -102,6 +108,13 @@
 		}
 	}
 
+	function tip() {
+		uni.showToast({
+			title: '正在开发，敬请期待...',
+			icon: 'none',
+			duration: 2000
+		})
+	}
 	const functions = ref([{
 			id: 1,
 			title: '我的收藏',
@@ -128,7 +141,7 @@
 		},
 		{
 			id: 4,
-			title: '消息通知',
+			title: '等待开发',
 			icon: 'bell',
 			color: '#fff',
 			bgColor: '#FF2D55',
@@ -138,41 +151,73 @@
 
 	const settings = ref([{
 			id: 1,
-			title: '账号设置',
+			title: '主题设置',
 			icon: 'setting',
 			color: '#007AFF',
-			path: '/pages/profile/account'
+			path: 'theme'
 		},
 		{
 			id: 2,
 			title: '联系管理员',
 			icon: 'kefu-ermai',
 			color: '#AF52DE',
-			path: '/pages/profile/theme'
+			path: 'admin'
 		},
 		{
 			id: 3,
 			title: '关于我们',
 			icon: 'info-circle',
 			color: '#FF9500',
-			path: '/pages/profile/about'
+			path: 'about'
 		},
 		{
 			id: 4,
 			title: '帮助中心',
 			icon: 'question-circle',
 			color: '#8E8E93',
-			path: '/pages/profile/help'
+			path: 'help'
 		}
 	])
 
 	// 页面跳转
 	const navigateTo = (path) => {
 		if (!isLogin.value && path !== '/pages/login') {
-			uni.showToast({
-				title: '请先登录',
-				icon: 'none'
+			// 第一步：显示模态对话框（带倒计时）
+			let seconds = 2
+			uni.showModal({
+				title: '未登录提示',
+				content: `请先登录（${seconds}秒后自动跳转）`,
+				showCancel: false,
+				confirmText: '立即跳转',
+				success: (res) => {
+					if (res.confirm) {
+						clearTimeout(timer)
+						uni.redirectTo({
+							url: '/pages/login/index'
+						})
+					}
+				}
 			})
+
+			// 第二步：动态更新倒计时
+			const timer = setInterval(() => {
+				seconds--
+				if (seconds <= 0) {
+					clearInterval(timer)
+					uni.redirectTo({
+						url: '/pages/login/index'
+					})
+				} else {
+					// 动态更新对话框内容（小程序可能需要特殊处理）
+					uni.showModal({
+						title: '未登录提示',
+						content: `请先登录（${seconds}秒后自动跳转）`,
+						showCancel: false,
+						confirmText: '立即跳转'
+					})
+				}
+			}, 1000)
+
 			return
 		}
 		uni.navigateTo({
@@ -199,13 +244,28 @@
 	onMounted(() => {
 		const localUser = getUserInfo()
 		if (localUser) {
-			isLogin.value = true
 			initInfo()
 		}
 	})
 </script>
 
 <style lang="scss">
+	.title {
+		width: 100%;
+		height: 100%;
+		position: relative;
+
+
+		.text {
+			font-size: 32rpx;
+			color: #333;
+			position: absolute;
+			left: 50%;
+			top: 50%;
+			transform: translate(-50%, -50%);
+		}
+	}
+
 	.profile-container {
 		padding: 24rpx;
 		padding-bottom: 40rpx;

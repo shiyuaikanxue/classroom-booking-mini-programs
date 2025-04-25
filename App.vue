@@ -16,4 +16,5 @@
 
 <style lang="scss">
 	@import '@/uni_modules/uv-ui-tools/index.scss';
+	/* app.vue 的 style 部分 */
 </style>
